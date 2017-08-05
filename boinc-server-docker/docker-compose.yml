@@ -1,0 +1,48 @@
+version: "2"
+
+volumes:
+  mysql:
+  project:
+  results:
+
+services:
+  mysql:
+    image: boinc/server_mysql:latest
+    build: images/mysql
+    network_mode: bridge
+    volumes:
+     - "mysql:/var/lib/mysql"
+    environment: 
+     - MYSQL_ROOT_PASSWORD=
+     - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+
+  makeproject:
+    image: boinc/server_makeproject:latest-b2d
+    build: 
+      context: images/makeproject
+      dockerfile: Dockerfile.b2d
+    hostname: boincserver
+    network_mode: bridge
+    links: 
+     - mysql
+    volumes:
+     - "project:/root/project.dst"
+
+  apache:
+    image: boinc/server_apache:latest-b2d
+    build: 
+      context: images/apache
+      dockerfile: Dockerfile.b2d
+    hostname: boincserver
+    network_mode: bridge
+    links:
+     - mysql
+    volumes: 
+     - "project:/root/project"
+     - "results:/results"
+     - "/var/run/docker.sock:/var/run/docker.sock"
+    ports: 
+     - "80:80"
+    tty: true
+
+
